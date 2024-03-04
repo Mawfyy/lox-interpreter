@@ -1,5 +1,7 @@
+mod parser;
 mod scanner;
 mod types;
+
 use clap::Parser;
 use scanner::{scan_tokens, Errors};
 use std::fs::File;
