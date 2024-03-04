@@ -13,7 +13,7 @@ use types::Args;
 fn main() {
     let args = Args::parse();
 
-    let Ok(file) = File::open(&args.path) else {
+    let Ok(file) = File::open(args.path) else {
         println!("Error {:#?}", Errors::FileNotFound);
         exit(1)
     };

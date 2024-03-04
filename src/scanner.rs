@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone)]
-enum TokenType {
+pub enum TokenType {
     String,
     Number,
     Semicolon,
@@ -355,11 +355,11 @@ pub fn scan_tokens(file_content: String) -> Result<Vec<Token>, Errors> {
         }
     }
 
-    if errors_scan.is_ok() {
-        return Err(errors_scan.unwrap());
+    if let Ok(error) = errors_scan {
+        return Err(error);
     }
 
-    return Ok(tokens);
+    Ok(tokens)
 }
 
 #[cfg(test)]
@@ -376,6 +376,13 @@ mod tests {
     #[test]
     fn it_should_return_error() {
         let source_code = String::from("var a = 1;\n var b = º;");
+        let tokens = scan_tokens(source_code);
+        assert_eq!(tokens.is_err(), true);
+    }
+
+    #[test]
+    fn it_should_return_error_string() {
+        let source_code = String::from("");
         let tokens = scan_tokens(source_code);
         assert_eq!(tokens.is_err(), true);
     }

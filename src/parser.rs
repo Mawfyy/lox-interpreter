@@ -5,8 +5,8 @@ struct Parser {
 }
 
 impl Parser {
-    pub fn new(mut self, tokens: Vec<Token>) {
-        self.tokens = tokens;
+    pub fn new(tokens: Vec<Token>) -> Self {
+        Parser { tokens }
     }
 }
 
