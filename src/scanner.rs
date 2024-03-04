@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-type ScanResult = Result<(), Errors>;
-
 #[derive(Debug, Copy, Clone)]
 enum TokenType {
     String,
@@ -51,7 +49,7 @@ pub enum Errors {
 }
 
 #[derive(Debug)]
-struct Token {
+pub struct Token {
     t_type: TokenType,
     value: String,
     line: usize,
@@ -67,29 +65,30 @@ impl Token {
     }
 }
 
-pub fn scan_tokens(file_content: String) -> ScanResult {
+pub fn scan_tokens(file_content: String) -> Result<Vec<Token>, Errors> {
     let mut current_character_index = 0;
     let mut line = 1;
     let mut tokens: Vec<Token> = Vec::new();
-    let mut errors_scan: ScanResult = Ok(());
+    let mut errors_scan: Result<Errors, ()> = Err(());
 
-    let mut keywords: HashMap<&str, TokenType> = HashMap::new();
-    keywords.insert("and", TokenType::And);
-    keywords.insert("class", TokenType::Class);
-    keywords.insert("else", TokenType::Else);
-    keywords.insert("false", TokenType::False);
-    keywords.insert("for", TokenType::For);
-    keywords.insert("fun", TokenType::Fun);
-    keywords.insert("if", TokenType::If);
-    keywords.insert("nil", TokenType::Nil);
-    keywords.insert("or", TokenType::Or);
-    keywords.insert("print", TokenType::Print);
-    keywords.insert("return", TokenType::Return);
-    keywords.insert("super", TokenType::Super);
-    keywords.insert("this", TokenType::This);
-    keywords.insert("true", TokenType::True);
-    keywords.insert("var", TokenType::Var);
-    keywords.insert("while", TokenType::While);
+    let keywords: HashMap<&str, TokenType> = HashMap::from([
+        ("and", TokenType::And),
+        ("class", TokenType::Class),
+        ("else", TokenType::Else),
+        ("false", TokenType::False),
+        ("for", TokenType::For),
+        ("fun", TokenType::Fun),
+        ("if", TokenType::If),
+        ("nil", TokenType::Nil),
+        ("or", TokenType::Or),
+        ("print", TokenType::Print),
+        ("return", TokenType::Return),
+        ("super", TokenType::Super),
+        ("this", TokenType::This),
+        ("true", TokenType::True),
+        ("var", TokenType::Var),
+        ("while", TokenType::While),
+    ]);
 
     while current_character_index < file_content.len() {
         let current_char = file_content.chars().nth(current_character_index).unwrap();
@@ -281,7 +280,7 @@ pub fn scan_tokens(file_content: String) -> ScanResult {
                     .map(|char| {
                         current_character_index += 1;
                         if current_character_index == file_content.len() - 1 {
-                            errors_scan = Err(Errors::SyntaxError(format!(
+                            errors_scan = Ok(Errors::SyntaxError(format!(
                                 "Unterminated String at line {}",
                                 line
                             )));
@@ -344,11 +343,40 @@ pub fn scan_tokens(file_content: String) -> ScanResult {
                 }
             }
 
-            _ => current_character_index += 1,
+            ' ' => {
+                current_character_index += 1;
+            }
+
+            char => {
+                return Err(Errors::SyntaxError(format!(
+                    "Unsupported token {char} at line {line}"
+                )));
+            }
         }
     }
 
-    println!("{:#?}", tokens);
+    if errors_scan.is_ok() {
+        return Err(errors_scan.unwrap());
+    }
 
-    errors_scan
+    return Ok(tokens);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_return_tokens() {
+        let source_code = String::from("var a = 1;\nwhile (a < 10) { print a; a = a + 1;}");
+        let tokens = scan_tokens(source_code);
+        assert_eq!(tokens.is_ok(), true);
+    }
+
+    #[test]
+    fn it_should_return_error() {
+        let source_code = String::from("var a = 1;\n var b = º;");
+        let tokens = scan_tokens(source_code);
+        assert_eq!(tokens.is_err(), true);
+    }
 }
